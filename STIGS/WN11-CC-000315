@@ -1,0 +1,66 @@
+<#
+.SYNOPSIS
+    Ensures Windows Installer feature 'Always install with elevated privileges' is disabled.
+
+.DESCRIPTION
+    This script disables the Windows Installer policy 'Always install with elevated privileges'
+    for both the machine (HKLM) and current user (HKCU). This prevents non-admin users from
+    installing MSI packages with elevated privileges.
+
+.STIG-ID
+    WN11-CC-000315
+
+.NOTES
+    Author          : Marco Posadas
+    LinkedIn        : linkedin.com/in/marco-posadas
+    GitHub          : github.com/marcopsd-dev
+    Date Created    : 2025/12/18
+    Version         : 1.1
+
+.TESTED ON
+    Windows 11
+    PowerShell 5.1+
+
+.USAGE
+    PS C:\> .\WN11-CC-000315_Remediation.ps1
+#>
+
+# Define registry paths and value name
+$RegistryPaths = @(
+    "HKLM:\Software\Policies\Microsoft\Windows\Installer",
+    "HKCU:\Software\Policies\Microsoft\Windows\Installer"
+)
+$ValueName = "AlwaysInstallElevated"
+$RequiredValue = 0  # 0 = disabled, 1 = enabled
+
+Write-Host "Applying STIG WN11-CC-000315..." -ForegroundColor Cyan
+
+foreach ($Path in $RegistryPaths) {
+
+    # Create registry path if it does not exist
+    if (-not (Test-Path $Path)) {
+        Write-Host "Creating registry path: $Path" -ForegroundColor Yellow
+        New-Item -Path $Path -Force | Out-Null
+    }
+
+    # Set AlwaysInstallElevated to 0 (disabled)
+    Set-ItemProperty -Path $Path -Name $ValueName -Value $RequiredValue -Force
+
+    # Verify setting
+    $CurrentValue = Get-ItemProperty -Path $Path -Name $ValueName | Select-Object -ExpandProperty $ValueName
+    Write-Host "`nVerification for ${Path}:" -ForegroundColor Yellow
+    if ($CurrentValue -eq $RequiredValue) {
+        Write-Host "STIG WN11-CC-000315 is COMPLIANT. AlwaysInstallElevated is disabled." -ForegroundColor Green
+    } else {
+        Write-Host "STIG WN11-CC-000315 is NOT COMPLIANT. AlwaysInstallElevated is still enabled!" -ForegroundColor Red
+    }
+}
+
+# Optional: Prompt for restart
+$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+if ($RestartChoice -match '^[Yy]$') {
+    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    shutdown.exe /r /t 0 /f
+} else {
+    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+}
