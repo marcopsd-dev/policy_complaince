@@ -41,5 +41,5 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 | STIG ID        | Title                                      | Severity | Status |
 |---------------|--------------------------------------------|----------|--------|
 | [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Application Event Log Size                 | Medium   | ✅ Implemented |
-
+| [WN11-CC-000280](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000280) | Remote Desktop Services passwords upon connection                 | Medium   | ✅ Implemented |
 
