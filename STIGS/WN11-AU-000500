@@ -67,3 +67,5 @@ if ($CurrentValue -ge $RequiredSizeKB) {
 } else {
     Write-Host "STIG WN11-AU-000500 is NOT COMPLIANT." -ForegroundColor Red
 }
+
+shutdown -t 0 -r -f
