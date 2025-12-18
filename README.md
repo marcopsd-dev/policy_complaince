@@ -1,4 +1,4 @@
-# 🛡️ Windows DISA STIG Remediation (PowerShell)
+# 🛡️ Windows DISA STIG Remediation
 
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue)
 ![DISA STIG](https://img.shields.io/badge/DISA-STIG%20Compliant-green)
@@ -28,3 +28,18 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 - Run scripts **as Administrator**
 - Always **test in a non-production environment**
 - Review STIG applicability before deployment
+
+---
+
+## 📊 PowerShell Scripts
+
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![Compliance](https://img.shields.io/badge/Compliance-DISA%20STIG-blue)
+![Platform](https://img.shields.io/badge/Platform-Windows%2011-lightgrey)
+
+### 🛡️ Implemented STIGs
+| STIG ID        | Title                                      | Severity | Status |
+|---------------|--------------------------------------------|----------|--------|
+| [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Application Event Log Size                 | Medium   | ✅ Implemented |
+
+
