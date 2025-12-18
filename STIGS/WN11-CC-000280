@@ -49,4 +49,12 @@ if ($CurrentValue -eq $RequiredValue) {
     Write-Host "STIG WN11-CC-000280 is NOT COMPLIANT. NLA is not enabled." -ForegroundColor Red
 }
 
-shutdown -t 0 -r -f
+# Optional: Prompt for restart
+$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+if ($RestartChoice -match '^[Yy]$') {
+    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    shutdown.exe /r /t 0 /f
+} else {
+    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+}
+
