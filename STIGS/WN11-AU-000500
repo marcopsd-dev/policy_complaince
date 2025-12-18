@@ -1,0 +1,69 @@
+<#
+.SYNOPSIS
+    This PowerShell script ensures that the maximum size of the Windows Application event log is at least 32768 KB (32 MB).
+
+.NOTES
+    Author          : Marco Posadas
+    LinkedIn        : linkedin.com/in/marco-posadas
+    GitHub          : github.com/marcopsd-dev
+    Date Created    : 2025/12/18
+    Last Modified   : 2025/12/18
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN11-AU-000500
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_STIG-ID-WN10-AU-000500.ps1 
+#>
+
+# YOUR CODE GOES HERE:
+
+# ==========================================
+# STIG ID: WN11-AU-000500
+# Title: Application Event Log Size
+# Requirement: >= 32768 KB
+# ==========================================
+
+$RegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application"
+$ValueName = "MaxSize"
+$RequiredSizeKB = 32768
+
+Write-Host "Applying STIG WN11-AU-000500..." -ForegroundColor Cyan
+
+# Create registry path if it does not exist
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set the maximum log size
+New-ItemProperty `
+    -Path $RegPath `
+    -Name $ValueName `
+    -PropertyType DWord `
+    -Value $RequiredSizeKB `
+    -Force | Out-Null
+
+# Restart Event Log service (optional but recommended)
+Write-Host "Restarting Windows Event Log service..." -ForegroundColor Yellow
+Restart-Service -Name eventlog -Force
+
+# Verify setting
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $ValueName | Select-Object -ExpandProperty $ValueName
+
+Write-Host "`nVerification:" -ForegroundColor Yellow
+Write-Host "Application Log MaxSize = $CurrentValue KB"
+
+if ($CurrentValue -ge $RequiredSizeKB) {
+    Write-Host "STIG WN11-AU-000500 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "STIG WN11-AU-000500 is NOT COMPLIANT." -ForegroundColor Red
+}
