@@ -1,0 +1,81 @@
+<#
+.SYNOPSIS
+    Disables printing over HTTP by removing the Internet Printing feature and stopping the Internet Printing service.
+
+.DESCRIPTION
+    This script ensures that the system does not allow printing over HTTP by:
+    1. Removing the "Internet Printing Client" Windows feature.
+    2. Stopping and disabling the "Internet Printing" service (if it exists).
+
+.STIG-ID
+    WN11-CC-000110
+
+.NOTES
+    Author          : Marco Posadas
+    LinkedIn        : linkedin.com/in/marco-posadas
+    GitHub          : github.com/marcopsd-dev
+    Date Created    : 2025/12/18
+    Version         : 1.0
+
+.TESTED ON
+    Windows 11
+    PowerShell 5.1+
+
+.USAGE
+    PS C:\> .\WN11-CC-000110_Remediation.ps1
+#>
+
+Write-Host "Applying STIG WN11-CC-000110..." -ForegroundColor Cyan
+
+# 1️⃣ Remove Internet Printing Client feature (Windows Optional Feature)
+$FeatureName = "Printing-InternetPrintingClient"
+$feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
+
+if ($feature.State -eq "Enabled") {
+    Write-Host "Disabling Windows feature: $FeatureName" -ForegroundColor Yellow
+    Disable-WindowsOptionalFeature -Online -FeatureName $FeatureName -NoRestart -ErrorAction Stop
+    Write-Host "Feature $FeatureName disabled." -ForegroundColor Green
+} else {
+    Write-Host "Feature $FeatureName is already disabled." -ForegroundColor Green
+}
+
+# 2️⃣ Stop and disable Internet Printing service if it exists
+$serviceName = "LPDSVC"  # Internet Printing Service
+$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+
+if ($service) {
+    if ($service.Status -ne "Stopped") {
+        Write-Host "Stopping service: $serviceName" -ForegroundColor Yellow
+        Stop-Service -Name $serviceName -Force
+    }
+    Write-Host "Disabling service: $serviceName" -ForegroundColor Yellow
+    Set-Service -Name $serviceName -StartupType Disabled
+    Write-Host "Service $serviceName is now disabled." -ForegroundColor Green
+} else {
+    Write-Host "Service $serviceName does not exist. Nothing to disable." -ForegroundColor Green
+}
+
+Write-Host "`nVerification:" -ForegroundColor Cyan
+
+# Verify feature
+$feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
+Write-Host "Feature $FeatureName state: $($feature.State)" -ForegroundColor Yellow
+
+# Verify service
+$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+if ($service) {
+    Write-Host "Service $serviceName startup type: $($service.StartType), status: $($service.Status)" -ForegroundColor Yellow
+} else {
+    Write-Host "Service $serviceName is not installed." -ForegroundColor Yellow
+}
+
+Write-Host "`nSTIG WN11-CC-000110 remediation complete." -ForegroundColor Cyan
+
+# Optional: Prompt for restart
+$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+if ($RestartChoice -match '^[Yy]$') {
+    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    shutdown.exe /r /t 0 /f
+} else {
+    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+}
