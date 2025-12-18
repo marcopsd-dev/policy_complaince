@@ -1,0 +1,52 @@
+<#
+.SYNOPSIS
+    Ensures Remote Desktop Services always prompt for passwords by requiring NLA.
+
+.DESCRIPTION
+    This script configures the system to enforce Network Level Authentication (NLA) 
+    for Remote Desktop Services, which ensures that clients must authenticate before connecting.
+
+.STIG-ID
+    WN11-CC-000280
+
+.NOTES
+    Author          : Marco Posadas
+    LinkedIn        : linkedin.com/in/marco-posadas
+    GitHub          : github.com/marcopsd-dev
+    Date Created    : 2025/12/18
+    Version         : 1.0
+
+.TESTED ON
+    Windows 11
+    PowerShell 5.1+
+
+.USAGE
+    PS C:\> .\WN11-CC-000280_Remediation.ps1
+#>
+
+$RegPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
+$ValueName = "UserAuthentication"
+$RequiredValue = 1  # 1 = NLA enabled, 0 = NLA disabled
+
+Write-Host "Applying STIG WN11-CC-000280..." -ForegroundColor Cyan
+
+# Create registry path if it does not exist (should exist by default)
+if (-not (Test-Path $RegPath)) {
+    Write-Host "Registry path not found! Creating..." -ForegroundColor Yellow
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set the UserAuthentication value to enforce NLA
+Set-ItemProperty -Path $RegPath -Name $ValueName -Value $RequiredValue -Force
+
+# Verify setting
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $ValueName | Select-Object -ExpandProperty $ValueName
+
+Write-Host "`nVerification:" -ForegroundColor Yellow
+if ($CurrentValue -eq $RequiredValue) {
+    Write-Host "STIG WN11-CC-000280 is COMPLIANT. NLA is enabled." -ForegroundColor Green
+} else {
+    Write-Host "STIG WN11-CC-000280 is NOT COMPLIANT. NLA is not enabled." -ForegroundColor Red
+}
+
+shutdown -t 0 -r -f
