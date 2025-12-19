@@ -40,7 +40,8 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 ### 🛡️ Implemented STIGs
 | STIG ID        | Title                                      | Severity | Status |
 |---------------|--------------------------------------------|----------|--------|
-| [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Application Event Log Size                 | Medium   | ✅ Implemented |
+| [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Configures Windows 11 to audit "Other Logon/Logoff Events" successes. | Medium   | ✅ Implemented |
+| [WN11-AU-000560](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000560) | Application Event Log Size                 | Low   | ✅ Implemented |
 | [WN11-CC-000110](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000110) | Printing over HTTP must be prevented       | Medium   | ✅ Implemented |
 | [WN11-CC-000252](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000252) | Disables Windows Game Recording and Broadcasting.| Low   | ✅ Implemented |
 | [WN11-CC-000280](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000280) |Remote Desktop Services prompt passwords upon connection.| Medium   | ✅ Implemented |
