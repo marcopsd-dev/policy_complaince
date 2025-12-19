@@ -40,6 +40,7 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 ### 🛡️ Implemented STIGs
 | STIG ID        | Title                                      | Severity | Status |
 |---------------|--------------------------------------------|----------|--------|
+| [WN11-AU-000050](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000050) | Configures Windows 11 to audit Detailed Tracking - Process Creation successes. | Low   | ✅ Implemented |
 | [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Configures Windows 11 to audit "Other Logon/Logoff Events" successes. | Medium   | ✅ Implemented |
 | [WN11-AU-000560](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000560) | Application Event Log Size                 | Low   | ✅ Implemented |
 | [WN11-CC-000110](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000110) | Printing over HTTP must be prevented       | Medium   | ✅ Implemented |
