@@ -1,0 +1,78 @@
+<#
+.SYNOPSIS
+    Configures Windows 11 to audit Detailed Tracking - Process Creation successes.
+
+.DESCRIPTION
+    Remediates STIG WN11-AU-000050 by using AuditPol.exe to enable Success auditing
+    for the "Process Creation" subcategory under Detailed Tracking.
+    Verifies that "Force audit policy subcategory settings to override category settings"
+    is enabled as required (WN11-SO-000030).
+
+.NOTES
+    Author : Marco Posadas
+    GitHub : github.com/marcopsd-dev
+    Date   : 2025-12-18
+    Version: 1.0
+
+.USAGE
+    PS C:\> .\WN11-AU-000050.ps1
+#>
+
+Write-Host "Applying STIG WN11-AU-000050..." -ForegroundColor Cyan
+
+# ============================================================
+# Step 1: Verify "Force audit policy subcategory settings to override category settings" is enabled
+# ============================================================
+$AuditOverrideReg = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
+$AuditOverrideValueName = "SCENoApplyLegacyAuditPolicy"
+$RequiredOverrideValue = 1
+
+$CurrentOverrideValue = (Get-ItemProperty -Path $AuditOverrideReg -Name $AuditOverrideValueName -ErrorAction SilentlyContinue).$AuditOverrideValueName
+
+if ($CurrentOverrideValue -ne $RequiredOverrideValue) {
+    Write-Host "`nEnabling 'Force audit policy subcategory settings to override category settings'..." -ForegroundColor Yellow
+    New-ItemProperty -Path $AuditOverrideReg -Name $AuditOverrideValueName -PropertyType DWord -Value $RequiredOverrideValue -Force | Out-Null
+} else {
+    Write-Host "`nAudit policy override is already enabled." -ForegroundColor Green
+}
+
+# ============================================================
+# Step 2: Configure Process Creation auditing
+# ============================================================
+$AuditSubcategory = "Process Creation"
+
+Write-Host "`nEnabling Success auditing for '$AuditSubcategory'..." -ForegroundColor Yellow
+AuditPol.exe /set /subcategory:"$AuditSubcategory" /success:enable /failure:disable
+
+# ============================================================
+# Step 3: Verification
+# ============================================================
+Write-Host "`nVerifying Audit Policy..." -ForegroundColor Cyan
+$Verify = AuditPol.exe /get /subcategory:"$AuditSubcategory"
+
+Write-Host $Verify
+
+# Check if Success is present
+$SuccessEnabled = $Verify -match "\bSuccess\b"
+$FailureEnabled = $Verify -match "\bFailure\b"
+
+Write-Host "`nAudit Policy Status:"
+Write-Host "Success auditing enabled = $SuccessEnabled"
+Write-Host "Failure auditing enabled = $FailureEnabled"
+
+if ($SuccessEnabled -and -not $FailureEnabled) {
+    Write-Host "`nSTIG WN11-AU-000050 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "`nSTIG WN11-AU-000050 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# ============================================================
+# Step 4: Optional Restart Prompt
+# ============================================================
+$RestartPrompt = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+if ($RestartPrompt -match '^[Yy]$') {
+    Write-Host "Restarting the VM..." -ForegroundColor Yellow
+    Restart-Computer -Force
+} else {
+    Write-Host "Restart skipped." -ForegroundColor Cyan
+}
