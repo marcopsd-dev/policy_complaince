@@ -71,10 +71,10 @@ if ($service) {
 Write-Host "`nSTIG WN11-CC-000110 remediation complete." -ForegroundColor Cyan
 
 # 4️⃣ Optional reboot for full compliance detection
-$RestartChoice = Read-Host "`nSome changes may require a reboot to be detected by Tenable. Restart now? (Y/N)"
+$RestartChoice = Read-Host "`nSome changes may require a reboot to be detected. Restart now? (Y/N)"
 if ($RestartChoice -match '^[Yy]$') {
     Write-Host "Restarting system..." -ForegroundColor Yellow
     shutdown.exe /r /t 0 /f
 } else {
-    Write-Host "Restart skipped. Tenable may require a reboot to detect compliance." -ForegroundColor Cyan
+    Write-Host "Restart skipped. May require a reboot to detect compliance." -ForegroundColor Cyan
 }
