@@ -65,7 +65,24 @@ Write-Host "Restarting Remote Desktop Services..." -ForegroundColor Yellow
 Restart-Service -Name TermService -Force
 
 # ============================================================
-# 4️⃣ Optional System Restart (Prompt User)
+# 4️⃣ Verification (Tenable-aligned)
+# ============================================================
+Write-Host "`nVerification:" -ForegroundColor Cyan
+
+$NlaCurrent = Get-ItemProperty -Path $RdpRegPath -Name $NlaValue | Select-Object -ExpandProperty $NlaValue
+$PromptCurrent = Get-ItemProperty -Path $PolicyPath -Name $PromptValue | Select-Object -ExpandProperty $PromptValue
+
+Write-Host "NLA (UserAuthentication) = $NlaCurrent"
+Write-Host "Always Prompt for Password (fPromptForPassword) = $PromptCurrent"
+
+if ($NlaCurrent -eq 1 -and $PromptCurrent -eq 1) {
+    Write-Host "`nSTIG WN11-CC-000280 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "`nSTIG WN11-CC-000280 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# ============================================================
+# 5️⃣ Optional System Restart (Prompt User)
 # ============================================================
 $RestartChoice = Read-Host "`nDo you want to restart the system now to fully apply changes? (Y/N)"
 
