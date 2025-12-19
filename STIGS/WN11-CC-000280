@@ -1,60 +1,79 @@
 <#
 .SYNOPSIS
-    Ensures Remote Desktop Services always prompt for passwords by requiring NLA.
+    Enforces Remote Desktop password prompting requirements.
 
 .DESCRIPTION
-    This script configures the system to enforce Network Level Authentication (NLA) 
-    for Remote Desktop Services, which ensures that clients must authenticate before connecting.
+    Remediates STIG WN11-CC-000280 by:
+    - Enabling Network Level Authentication (NLA)
+    - Enabling "Always prompt for password upon connection"
+    - Restarting Remote Desktop Services
+    - Verifying registry values Tenable evaluates
 
 .STIG-ID
     WN11-CC-000280
 
 .NOTES
     Author          : Marco Posadas
-    LinkedIn        : linkedin.com/in/marco-posadas
     GitHub          : github.com/marcopsd-dev
-    Date Created    : 2025/12/18
-    Version         : 1.0
-
-.TESTED ON
-    Windows 11
-    PowerShell 5.1+
+    Date Created    : 2025-12-18
+    Version         : 1.3
 
 .USAGE
-    PS C:\> .\WN11-CC-000280_Remediation.ps1
+    PS C:\> .\WN11-CC-000280.ps1
 #>
-
-$RegPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
-$ValueName = "UserAuthentication"
-$RequiredValue = 1  # 1 = NLA enabled, 0 = NLA disabled
 
 Write-Host "Applying STIG WN11-CC-000280..." -ForegroundColor Cyan
 
-# Create registry path if it does not exist (should exist by default)
-if (-not (Test-Path $RegPath)) {
-    Write-Host "Registry path not found! Creating..." -ForegroundColor Yellow
-    New-Item -Path $RegPath -Force | Out-Null
+# ============================================================
+# 1️⃣ Enable Network Level Authentication (NLA)
+# ============================================================
+$RdpRegPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"
+$NlaValue = "UserAuthentication"
+
+if (-not (Test-Path $RdpRegPath)) {
+    Write-Host "RDP registry path not found. Exiting." -ForegroundColor Red
+    exit 1
 }
 
-# Set the UserAuthentication value to enforce NLA
-Set-ItemProperty -Path $RegPath -Name $ValueName -Value $RequiredValue -Force
+Write-Host "Enabling Network Level Authentication (NLA)..." -ForegroundColor Yellow
+Set-ItemProperty -Path $RdpRegPath -Name $NlaValue -Type DWord -Value 1 -Force
 
-# Verify setting
-$CurrentValue = Get-ItemProperty -Path $RegPath -Name $ValueName | Select-Object -ExpandProperty $ValueName
+# ============================================================
+# 2️⃣ Enable 'Always prompt for password upon connection'
+#     (REQUIRED for Tenable PASS)
+# ============================================================
+$PolicyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+$PromptValue = "fPromptForPassword"
 
-Write-Host "`nVerification:" -ForegroundColor Yellow
-if ($CurrentValue -eq $RequiredValue) {
-    Write-Host "STIG WN11-CC-000280 is COMPLIANT. NLA is enabled." -ForegroundColor Green
-} else {
-    Write-Host "STIG WN11-CC-000280 is NOT COMPLIANT. NLA is not enabled." -ForegroundColor Red
+Write-Host "Enforcing 'Always prompt for password upon connection' policy..." -ForegroundColor Yellow
+
+if (-not (Test-Path $PolicyPath)) {
+    New-Item -Path $PolicyPath -Force | Out-Null
 }
 
-# Optional: Prompt for restart
-$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+New-ItemProperty `
+    -Path $PolicyPath `
+    -Name $PromptValue `
+    -PropertyType DWord `
+    -Value 1 `
+    -Force | Out-Null
+
+# ============================================================
+# 3️⃣ Restart Remote Desktop Services
+# ============================================================
+Write-Host "Restarting Remote Desktop Services..." -ForegroundColor Yellow
+Restart-Service -Name TermService -Force
+
+# ============================================================
+# 4️⃣ Optional System Restart (Prompt User)
+# ============================================================
+$RestartChoice = Read-Host "`nDo you want to restart the system now to fully apply changes? (Y/N)"
+
 if ($RestartChoice -match '^[Yy]$') {
-    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    Write-Host "Restarting system..." -ForegroundColor Yellow
     shutdown.exe /r /t 0 /f
-} else {
-    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+}
+else {
+    Write-Host "System restart skipped. Please remember to reboot later if required." -ForegroundColor Cyan
 }
 
