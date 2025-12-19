@@ -1,0 +1,77 @@
+<#
+.SYNOPSIS
+    Prevents users from changing Windows Installer installation options.
+
+.DESCRIPTION
+    Remediates STIG WN11-CC-000310 by configuring the policy
+    "Allow user control over installs" to Disabled.
+
+    This is enforced via registry to satisfy DISA STIG and Tenable
+    compliance scans.
+
+.STIG-ID
+    WN11-CC-000310
+
+.NOTES
+    Author          : Marco Posadas
+    GitHub          : github.com/marcopsd-dev
+    Date Created    : 2025-12-18
+    Version         : 1.0
+
+.USAGE
+    PS C:\> .\WN11-CC-000310.ps1
+#>
+
+Write-Host "Applying STIG WN11-CC-000310..." -ForegroundColor Cyan
+
+# ============================================================
+# Registry Configuration (Tenable-Checked)
+# ============================================================
+$RegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer"
+$ValueName = "EnableUserControl"
+$RequiredValue = 0
+
+Write-Host "Disabling user control over Windows Installer installs..." -ForegroundColor Yellow
+
+# Create registry path if it does not exist
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set required registry value
+New-ItemProperty `
+    -Path $RegPath `
+    -Name $ValueName `
+    -PropertyType DWord `
+    -Value $RequiredValue `
+    -Force | Out-Null
+
+# ============================================================
+# Verification (STIG / Tenable Aligned)
+# ============================================================
+Write-Host "`nVerification:" -ForegroundColor Cyan
+
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $ValueName |
+    Select-Object -ExpandProperty $ValueName
+
+Write-Host "EnableUserControl = $CurrentValue"
+
+if ($CurrentValue -eq $RequiredValue) {
+    Write-Host "`nSTIG WN11-CC-000310 is COMPLIANT." -ForegroundColor Green
+}
+else {
+    Write-Host "`nSTIG WN11-CC-000310 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# ============================================================
+#  Optional System Restart (Prompt User)
+# ============================================================
+$RestartChoice = Read-Host "`nDo you want to restart the system now to fully apply changes? (Y/N)"
+
+if ($RestartChoice -match '^[Yy]$') {
+    Write-Host "Restarting system..." -ForegroundColor Yellow
+    shutdown.exe /r /t 0 /f
+}
+else {
+    Write-Host "System restart skipped. Please remember to reboot later if required." -ForegroundColor Cyan
+}
