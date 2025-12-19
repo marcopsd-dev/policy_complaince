@@ -1,21 +1,21 @@
 <#
 .SYNOPSIS
-    Disables printing over HTTP by removing the Internet Printing feature and stopping the Internet Printing service.
+    Disables printing over HTTP to comply with STIG WN11-CC-000110.
 
 .DESCRIPTION
-    This script ensures that the system does not allow printing over HTTP by:
-    1. Removing the "Internet Printing Client" Windows feature.
-    2. Stopping and disabling the "Internet Printing" service (if it exists).
+    This script ensures that:
+    1. The Internet Printing Client feature is fully removed.
+    2. The Internet Printing service (LPDSVC) is stopped and disabled if present.
+    3. Compliance is verified in a way Tenable can detect.
 
 .STIG-ID
     WN11-CC-000110
 
 .NOTES
     Author          : Marco Posadas
-    LinkedIn        : linkedin.com/in/marco-posadas
     GitHub          : github.com/marcopsd-dev
     Date Created    : 2025/12/18
-    Version         : 1.0
+    Version         : 1.1
 
 .TESTED ON
     Windows 11
@@ -27,16 +27,16 @@
 
 Write-Host "Applying STIG WN11-CC-000110..." -ForegroundColor Cyan
 
-# 1️⃣ Remove Internet Printing Client feature (Windows Optional Feature)
+# 1️⃣ Fully remove Internet Printing Client feature
 $FeatureName = "Printing-InternetPrintingClient"
 $feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
 
 if ($feature.State -eq "Enabled") {
-    Write-Host "Disabling Windows feature: $FeatureName" -ForegroundColor Yellow
-    Disable-WindowsOptionalFeature -Online -FeatureName $FeatureName -NoRestart -ErrorAction Stop
-    Write-Host "Feature $FeatureName disabled." -ForegroundColor Green
+    Write-Host "Removing Windows feature: $FeatureName" -ForegroundColor Yellow
+    Disable-WindowsOptionalFeature -Online -FeatureName $FeatureName -Remove -NoRestart -ErrorAction Stop
+    Write-Host "Feature $FeatureName removed." -ForegroundColor Green
 } else {
-    Write-Host "Feature $FeatureName is already disabled." -ForegroundColor Green
+    Write-Host "Feature $FeatureName is already removed or disabled." -ForegroundColor Green
 }
 
 # 2️⃣ Stop and disable Internet Printing service if it exists
@@ -55,13 +55,12 @@ if ($service) {
     Write-Host "Service $serviceName does not exist. Nothing to disable." -ForegroundColor Green
 }
 
+# 3️⃣ Verification for Tenable
 Write-Host "`nVerification:" -ForegroundColor Cyan
 
-# Verify feature
 $feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
 Write-Host "Feature $FeatureName state: $($feature.State)" -ForegroundColor Yellow
 
-# Verify service
 $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 if ($service) {
     Write-Host "Service $serviceName startup type: $($service.StartType), status: $($service.Status)" -ForegroundColor Yellow
@@ -71,11 +70,11 @@ if ($service) {
 
 Write-Host "`nSTIG WN11-CC-000110 remediation complete." -ForegroundColor Cyan
 
-# Optional: Prompt for restart
-$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+# 4️⃣ Optional reboot for full compliance detection
+$RestartChoice = Read-Host "`nSome changes may require a reboot to be detected by Tenable. Restart now? (Y/N)"
 if ($RestartChoice -match '^[Yy]$') {
-    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    Write-Host "Restarting system..." -ForegroundColor Yellow
     shutdown.exe /r /t 0 /f
 } else {
-    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+    Write-Host "Restart skipped. Tenable may require a reboot to detect compliance." -ForegroundColor Cyan
 }
