@@ -1,0 +1,58 @@
+ <#
+.SYNOPSIS
+    Configures Windows 11 to audit "Other Logon/Logoff Events" successes.
+
+.DESCRIPTION
+    Remediates STIG WN11-AU-000560 using AuditPol.exe.
+    Ensures "Other Logon/Logoff Events" are audited for Success.
+    Robustly handles Windows 11 AuditPol output.
+
+.NOTES
+    Author : Marco Posadas
+    GitHub : github.com/marcopsd-dev
+    Version: 2.0
+#>
+
+Write-Host "Applying STIG WN11-AU-000560..." -ForegroundColor Cyan
+
+# ============================================================
+# Define Subcategory
+# ============================================================
+$AuditSubcategory = "Other Logon/Logoff Events"
+
+# ============================================================
+# Apply Audit Policy
+# ============================================================
+Write-Host "`nEnabling Success auditing for '$AuditSubcategory'..." -ForegroundColor Yellow
+AuditPol.exe /set /subcategory:"$AuditSubcategory" /success:enable /failure:disable
+
+# ============================================================
+# Verification
+# ============================================================
+Write-Host "`nVerifying Audit Policy..." -ForegroundColor Cyan
+$Verify = AuditPol.exe /get /subcategory:"$AuditSubcategory"
+
+Write-Host $Verify
+
+# Check if Success is present in the output
+$SuccessEnabled = $Verify -match "\bSuccess\b"
+$FailureEnabled = $Verify -match "\bFailure\b"
+
+Write-Host "`nAudit Policy Status:"
+Write-Host "Success auditing enabled = $SuccessEnabled"
+Write-Host "Failure auditing enabled = $FailureEnabled"
+
+if ($SuccessEnabled -and -not $FailureEnabled) {
+    Write-Host "`nSTIG WN11-AU-000560 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "`nSTIG WN11-AU-000560 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# Optional: Prompt for restart
+$RestartChoice = Read-Host "`nDo you want to restart the VM now? (Y/N)"
+if ($RestartChoice -match '^[Yy]$') {
+    Write-Host "Restarting the system..." -ForegroundColor Yellow
+    shutdown.exe /r /t 0 /f
+} else {
+    Write-Host "Restart skipped. Changes will take effect immediately for new installations." -ForegroundColor Cyan
+} 
