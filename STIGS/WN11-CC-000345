@@ -1,0 +1,63 @@
+<#
+.SYNOPSIS
+    Disables WinRM Basic authentication per STIG WN11-CC-000345.
+
+.DESCRIPTION
+    Sets the following registry value:
+    HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service
+    AllowBasic = 0 (REG_DWORD)
+
+.NOTES
+    Author  : Marco Posadas
+    STIG-ID : WN11-CC-000345
+    Version : 1.0
+#>
+
+Write-Host "Applying STIG WN11-CC-000345..." -ForegroundColor Cyan
+
+# ============================================================
+# Registry Configuration
+# ============================================================
+$RegPath  = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service"
+$Value    = "AllowBasic"
+$Required = 0
+
+# Create registry path if missing
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set registry value
+New-ItemProperty `
+    -Path $RegPath `
+    -Name $Value `
+    -PropertyType DWord `
+    -Value $Required `
+    -Force | Out-Null
+
+Write-Host "WinRM Basic authentication disabled." -ForegroundColor Green
+
+# ============================================================
+# Verification
+# ============================================================
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $Value -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty $Value
+
+Write-Host "`nVerification:" -ForegroundColor Yellow
+Write-Host "AllowBasic = $CurrentValue"
+
+if ($CurrentValue -eq $Required) {
+    Write-Host "STIG WN11-CC-000345 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "STIG WN11-CC-000345 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# ============================================================
+# Optional Restart Prompt
+# ============================================================
+$Restart = Read-Host "`nDo you want to restart the system now? (Y/N)"
+if ($Restart -match '^[Yy]$') {
+    Restart-Computer -Force
+} else {
+    Write-Host "Restart skipped." -ForegroundColor Cyan
+}
