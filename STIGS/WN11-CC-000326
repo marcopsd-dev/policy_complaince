@@ -1,0 +1,63 @@
+<#
+.SYNOPSIS
+    Enables PowerShell Script Block Logging per STIG WN11-CC-000326.
+
+.DESCRIPTION
+    Configures the following registry setting:
+    HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
+    EnableScriptBlockLogging = 1 (REG_DWORD)
+
+.NOTES
+    Author  : Marco Posadas
+    STIG-ID : WN11-CC-000326
+    Version : 1.0
+#>
+
+Write-Host "Applying STIG WN11-CC-000326..." -ForegroundColor Cyan
+
+# ============================================================
+# Registry Configuration
+# ============================================================
+$RegPath  = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
+$Value    = "EnableScriptBlockLogging"
+$Required = 1
+
+# Create registry path if missing
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set registry value
+New-ItemProperty `
+    -Path $RegPath `
+    -Name $Value `
+    -PropertyType DWord `
+    -Value $Required `
+    -Force | Out-Null
+
+Write-Host "PowerShell Script Block Logging enabled." -ForegroundColor Green
+
+# ============================================================
+# Verification
+# ============================================================
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $Value -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty $Value
+
+Write-Host "`nVerification:" -ForegroundColor Yellow
+Write-Host "EnableScriptBlockLogging = $CurrentValue"
+
+if ($CurrentValue -eq $Required) {
+    Write-Host "STIG WN11-CC-000326 is COMPLIANT." -ForegroundColor Green
+} else {
+    Write-Host "STIG WN11-CC-000326 is NOT COMPLIANT." -ForegroundColor Red
+}
+
+# ============================================================
+# Optional Restart Prompt
+# ============================================================
+$Restart = Read-Host "`nDo you want to restart the system now? (Y/N)"
+if ($Restart -match '^[Yy]$') {
+    Restart-Computer -Force
+} else {
+    Write-Host "Restart skipped." -ForegroundColor Cyan
+}
