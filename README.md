@@ -48,4 +48,5 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 | [WN11-CC-000280](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000280) |Remote Desktop Services prompt passwords upon connection.| Medium   | ✅ Implemented |
 | [WN11-CC-000310](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000310) | Prevents users from changing Windows Installer installation options.       | Medium   | ✅ Implemented |
 | [WN11-CC-000315](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000315) | The Windows Installer feature elevated privileges must be disabled.| HIGH   | ✅ Implemented |
+| [WN11-CC-000326](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000326) | Enables PowerShell Script Block Logging.| Medium   | ✅ Implemented |
 | [WN11-CC-000345](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000345) | Disables WinRM Basic authentication.| HIGH   | ✅ Implemented |
