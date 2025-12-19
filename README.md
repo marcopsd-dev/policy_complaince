@@ -41,7 +41,7 @@ This repository contains **PowerShell scripts** designed to **remediate Windows 
 | STIG ID        | Title                                      | Severity | Status |
 |---------------|--------------------------------------------|----------|--------|
 | [WN11-AU-000500](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-AU-000500) | Application Event Log Size                 | Medium   | ✅ Implemented |
-| [WN11-CC-000280](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000280) |Remote Desktop Services prompt passwords upon connection.| Medium   | ✅ Implemented |
-| [WN11-CC-000315](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000315) | The Windows Installer feature elevated privileges must be disabled.| HIGH   | ✅ Implemented |
 | [WN11-CC-000110](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000110) | Printing over HTTP must be prevented       | Medium   | ✅ Implemented |
-
+| [WN11-CC-000280](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000280) |Remote Desktop Services prompt passwords upon connection.| Medium   | ✅ Implemented |
+| [WN11-CC-000310](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000310) | Printing over HTTP must be prevented       | Medium   | ✅ Implemented |
+| [WN11-CC-000315](https://github.com/marcopsd-dev/policy_complaince/blob/main/STIGS/WN11-CC-000315) | The Windows Installer feature elevated privileges must be disabled.| HIGH   | ✅ Implemented |
