@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Disables printing over HTTP to comply with STIG WN11-CC-000110.
+    Disables printing over HTTP.
 
 .DESCRIPTION
-    This script ensures that:
-    1. The Internet Printing Client feature is fully removed.
-    2. The Internet Printing service (LPDSVC) is stopped and disabled if present.
-    3. Compliance is verified in a way Tenable can detect.
+    Remediates STIG WN11-CC-000110 by configuring the policy
+    "Turn off printing over HTTP" to Enabled.
+
+    This is enforced via registry to satisfy Tenable compliance scans.
 
 .STIG-ID
     WN11-CC-000110
@@ -14,67 +14,62 @@
 .NOTES
     Author          : Marco Posadas
     GitHub          : github.com/marcopsd-dev
-    Date Created    : 2025/12/18
-    Version         : 1.1
-
-.TESTED ON
-    Windows 11
-    PowerShell 5.1+
+    Date Created    : 2025-12-18
+    Version         : 1.2
 
 .USAGE
-    PS C:\> .\WN11-CC-000110_Remediation.ps1
+    PS C:\> .\WN11-CC-000110.ps1
 #>
 
 Write-Host "Applying STIG WN11-CC-000110..." -ForegroundColor Cyan
 
-# 1️⃣ Fully remove Internet Printing Client feature
-$FeatureName = "Printing-InternetPrintingClient"
-$feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
+# ============================================================
+# Registry Configuration (Tenable-Checked)
+# ============================================================
+$RegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Printers"
+$ValueName = "DisableHTTPPrinting"
+$RequiredValue = 1
 
-if ($feature.State -eq "Enabled") {
-    Write-Host "Removing Windows feature: $FeatureName" -ForegroundColor Yellow
-    Disable-WindowsOptionalFeature -Online -FeatureName $FeatureName -Remove -NoRestart -ErrorAction Stop
-    Write-Host "Feature $FeatureName removed." -ForegroundColor Green
-} else {
-    Write-Host "Feature $FeatureName is already removed or disabled." -ForegroundColor Green
+Write-Host "Disabling printing over HTTP..." -ForegroundColor Yellow
+
+# Create registry path if it does not exist
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
 }
 
-# 2️⃣ Stop and disable Internet Printing service if it exists
-$serviceName = "LPDSVC"  # Internet Printing Service
-$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+# Set required registry value
+New-ItemProperty `
+    -Path $RegPath `
+    -Name $ValueName `
+    -PropertyType DWord `
+    -Value $RequiredValue `
+    -Force | Out-Null
 
-if ($service) {
-    if ($service.Status -ne "Stopped") {
-        Write-Host "Stopping service: $serviceName" -ForegroundColor Yellow
-        Stop-Service -Name $serviceName -Force
-    }
-    Write-Host "Disabling service: $serviceName" -ForegroundColor Yellow
-    Set-Service -Name $serviceName -StartupType Disabled
-    Write-Host "Service $serviceName is now disabled." -ForegroundColor Green
-} else {
-    Write-Host "Service $serviceName does not exist. Nothing to disable." -ForegroundColor Green
-}
-
-# 3️⃣ Verification for Tenable
+# ============================================================
+# Verification (Tenable-aligned)
+# ============================================================
 Write-Host "`nVerification:" -ForegroundColor Cyan
 
-$feature = Get-WindowsOptionalFeature -Online -FeatureName $FeatureName -ErrorAction SilentlyContinue
-Write-Host "Feature $FeatureName state: $($feature.State)" -ForegroundColor Yellow
+$CurrentValue = Get-ItemProperty -Path $RegPath -Name $ValueName | Select-Object -ExpandProperty $ValueName
 
-$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-if ($service) {
-    Write-Host "Service $serviceName startup type: $($service.StartType), status: $($service.Status)" -ForegroundColor Yellow
-} else {
-    Write-Host "Service $serviceName is not installed." -ForegroundColor Yellow
+Write-Host "DisableHTTPPrinting = $CurrentValue"
+
+if ($CurrentValue -eq $RequiredValue) {
+    Write-Host "`nSTIG WN11-CC-000110 is COMPLIANT." -ForegroundColor Green
+}
+else {
+    Write-Host "`nSTIG WN11-CC-000110 is NOT COMPLIANT." -ForegroundColor Red
 }
 
-Write-Host "`nSTIG WN11-CC-000110 remediation complete." -ForegroundColor Cyan
+# ============================================================
+# 4️⃣ Optional System Restart (Prompt User)
+# ============================================================
+$RestartChoice = Read-Host "`nDo you want to restart the system now to fully apply changes? (Y/N)"
 
-# 4️⃣ Optional reboot for full compliance detection
-$RestartChoice = Read-Host "`nSome changes may require a reboot to be detected. Restart now? (Y/N)"
 if ($RestartChoice -match '^[Yy]$') {
     Write-Host "Restarting system..." -ForegroundColor Yellow
     shutdown.exe /r /t 0 /f
-} else {
-    Write-Host "Restart skipped. May require a reboot to detect compliance." -ForegroundColor Cyan
+}
+else {
+    Write-Host "System restart skipped. Please remember to reboot later if required." -ForegroundColor Cyan
 }
